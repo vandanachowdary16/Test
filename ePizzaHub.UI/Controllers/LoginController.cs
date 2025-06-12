@@ -1,8 +1,10 @@
-﻿using ePizzaHub.UI.Models.ApiModels.Response;
+﻿using ePizzaHub.UI.Models.ApiModels.Request;
+using ePizzaHub.UI.Models.ApiModels.Response;
 using ePizzaHub.UI.Models.ViewModels;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages.Manage;
 using System.Security.Claims;
 
 namespace ePizzaHub.UI.Controllers
@@ -32,10 +34,37 @@ namespace ePizzaHub.UI.Controllers
 
             if(userDetails is not null)
             {
-                List<Claim> claims = new List<Claim>();
+                List<Claim> claims = [new Claim(ClaimTypes.Name, "sample")];
                 await GenerateTicket(claims);
+                return RedirectToAction("Index", "Dashboard");
             }
 
+            return View();
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Register()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Register(RegisterUserViewModel request)
+        {
+            if (ModelState.IsValid)
+            {
+                var client = httpClientFactory.CreateClient("ePizzaAPI");
+                var userRequest = new CreateUserRequestModel()
+                {
+                    Email = request.Email,
+                    Name = request.UserName,
+                    Password = request.Password,
+                    PhoneNumber = request.PhoneNumber
+                };
+
+                HttpResponseMessage? userdetails = await client.PostAsJsonAsync("User", userRequest);
+                userdetails.EnsureSuccessStatusCode();
+            }
             return View();
         }
 
